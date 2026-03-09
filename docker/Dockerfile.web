@@ -13,6 +13,10 @@ COPY packages/ ./packages/
 COPY apps/${APP_NAME}/ ./apps/${APP_NAME}/
 
 RUN npm ci
+
+# Build workspace dependencies first
+RUN npm run build --workspace=@vivipractice/types
+RUN npm run build --workspace=@vivipractice/ui
 RUN npm run build --workspace=@vivipractice/${APP_NAME}
 
 # Stage 2: Production

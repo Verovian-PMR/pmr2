@@ -8,6 +8,10 @@ COPY apps/api/ ./apps/api/
 
 RUN npm ci --ignore-scripts
 RUN npx prisma generate --schema=packages/database/prisma/schema.prisma
+
+# Build workspace dependencies first
+RUN npm run build --workspace=@vivipractice/database
+RUN npm run build --workspace=@vivipractice/types
 RUN npm run build --workspace=@vivipractice/api
 
 # Stage 2: Production

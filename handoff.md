@@ -72,7 +72,7 @@ Domains: `services.vivipractice.com` (public site) | `dashboard.vivipractice.com
    # Option A: SAN cert for both subdomains
    sudo certbot certonly --nginx -d services.vivipractice.com -d dashboard.vivipractice.com
    # Option B: Wildcard cert (requires DNS challenge)
-   sudo certbot certonly --manual --preferred-challenges dns -d "*.vivipractice.com" -d vivipractice.com
+   sudo certbot certonly --manual --preferred-challenges dns -d "*.vivipractice.com"
    ```
 4. **Deploy:**
    ```

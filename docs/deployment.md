@@ -39,7 +39,7 @@ The cert must cover both subdomains. For Let's Encrypt:
 # Option A: SAN cert for both subdomains
 sudo certbot certonly --nginx -d services.vivipractice.com -d dashboard.vivipractice.com
 # Option B: Wildcard cert (requires DNS challenge)
-sudo certbot certonly --manual --preferred-challenges dns -d "*.vivipractice.com" -d vivipractice.com
+sudo certbot certonly --manual --preferred-challenges dns -d "*.vivipractice.com"
 
 # Copy certs
 cp /etc/letsencrypt/live/vivipractice.com/fullchain.pem docker/nginx/certs/

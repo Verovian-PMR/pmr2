@@ -2,11 +2,14 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 
+# Build tools needed for native modules (bcrypt)
+RUN apk add --no-cache python3 make g++
+
 COPY package.json package-lock.json ./
 COPY packages/ ./packages/
 COPY apps/api/ ./apps/api/
 
-RUN npm ci --ignore-scripts
+RUN npm ci
 RUN npx prisma generate --schema=packages/database/prisma/schema.prisma
 
 # Build workspace dependencies first

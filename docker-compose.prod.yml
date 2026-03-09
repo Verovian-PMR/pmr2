@@ -1,5 +1,3 @@
-version: "3.8"
-
 # VivIPractice Production Stack
 # Target: AWS Lightsail 2 GB RAM / 2 vCPUs / 60 GB SSD
 # Domain: services.vivipractice.com

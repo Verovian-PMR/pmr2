@@ -54,11 +54,11 @@ services:
       dockerfile: docker/Dockerfile.web
       args:
         APP_NAME: dashboard
+        NEXT_PUBLIC_API_URL: https://dashboard.vivipractice.com/api/v1
     restart: unless-stopped
     environment:
       NODE_ENV: production
       PORT: 3002
-      NEXT_PUBLIC_API_URL: https://dashboard.vivipractice.com/api/v1
     deploy:
       resources:
         limits:
@@ -71,11 +71,11 @@ services:
       dockerfile: docker/Dockerfile.web
       args:
         APP_NAME: public-site
+        NEXT_PUBLIC_API_URL: https://services.vivipractice.com/api/v1
     restart: unless-stopped
     environment:
       NODE_ENV: production
       PORT: 3003
-      NEXT_PUBLIC_API_URL: https://services.vivipractice.com/api/v1
     deploy:
       resources:
         limits:

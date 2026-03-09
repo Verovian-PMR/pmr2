@@ -7,6 +7,7 @@ FROM node:20-slim AS builder
 WORKDIR /app
 
 ARG APP_NAME
+ARG NEXT_PUBLIC_API_URL
 
 COPY package.json package-lock.json ./
 COPY packages/ ./packages/
@@ -17,6 +18,9 @@ RUN npm ci
 # Build workspace dependencies first
 RUN npm run build --workspace=@vivipractice/types
 RUN npm run build --workspace=@vivipractice/ui
+
+# NEXT_PUBLIC_* vars must be available at build time
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 RUN npm run build --workspace=@vivipractice/${APP_NAME}
 
 # Stage 2: Production

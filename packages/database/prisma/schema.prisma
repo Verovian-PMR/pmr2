@@ -1,0 +1,279 @@
+// ============================================================
+// VivIPractice - Data Plane Schema (Per-Tenant Instance)
+// Each pharmacy gets its own isolated database.
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===== Users (Admin / Staff) =====
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  name         String
+  role         UserRole  @default(PHARMACY_STAFF)
+  mfaEnabled   Boolean   @default(false) @map("mfa_enabled")
+  mfaSecret    String?   @map("mfa_secret")
+  isActive     Boolean   @default(true) @map("is_active")
+  lastLoginAt  DateTime? @map("last_login_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  auditLogs AuditLog[]
+
+  @@map("users")
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  PHARMACY_ADMIN
+  PHARMACY_STAFF
+}
+
+// ===== Services =====
+model Service {
+  id               String        @id @default(cuid())
+  name             String
+  description      String        @db.Text
+  duration         Int           // minutes
+  featuredImageUrl String?       @map("featured_image_url")
+  status           ServiceStatus @default(ACTIVE)
+  order            Int           @default(0)
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+
+  appointments Appointment[]
+
+  @@map("services")
+}
+
+enum ServiceStatus {
+  ACTIVE
+  INACTIVE
+}
+
+// ===== Providers (Doctors / Pharmacists) =====
+model Provider {
+  id        String   @id @default(cuid())
+  name      String
+  title     String   // e.g. "Pharmacist", "Doctor"
+  email     String   @unique
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  workingHours       WorkingHours[]
+  scheduleExceptions ScheduleException[]
+  appointments       Appointment[]
+
+  @@map("providers")
+}
+
+// ===== Working Hours =====
+model WorkingHours {
+  id           String    @id @default(cuid())
+  providerId   String    @map("provider_id")
+  dayOfWeek    DayOfWeek @map("day_of_week")
+  startTime    String    @map("start_time") // HH:mm
+  endTime      String    @map("end_time")   // HH:mm
+  slotDuration Int       @map("slot_duration") // minutes
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  provider Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, dayOfWeek])
+  @@map("working_hours")
+}
+
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+// ===== Schedule Exceptions (Holidays, Leave) =====
+model ScheduleException {
+  id         String   @id @default(cuid())
+  providerId String   @map("provider_id")
+  date       DateTime @db.Date
+  startTime  String?  @map("start_time")
+  endTime    String?  @map("end_time")
+  isBlocked  Boolean  @default(true) @map("is_blocked")
+  reason     String?
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  provider Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@map("schedule_exceptions")
+}
+
+// ===== Appointments =====
+model Appointment {
+  id           String            @id @default(cuid())
+  serviceId    String            @map("service_id")
+  providerId   String?           @map("provider_id")
+  patientName  String            @map("patient_name")
+  patientEmail String            @map("patient_email")
+  patientPhone String?           @map("patient_phone")
+  slotStart    DateTime          @map("slot_start")
+  slotEnd      DateTime          @map("slot_end")
+  status       AppointmentStatus @default(PENDING)
+  notes        String?           @db.Text
+  formData     Json?             @map("form_data")
+  createdAt    DateTime          @default(now()) @map("created_at")
+  updatedAt    DateTime          @updatedAt @map("updated_at")
+
+  service  Service   @relation(fields: [serviceId], references: [id])
+  provider Provider? @relation(fields: [providerId], references: [id])
+
+  @@index([slotStart, slotEnd])
+  @@index([status])
+  @@map("appointments")
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+// ===== Site Settings (Singleton — brand, header, footer as JSON) =====
+model SiteSettings {
+  id           String   @id @default("site_settings")
+  settingsJson Json     @map("settings_json") // GlobalSettings JSON blob
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("site_settings")
+}
+
+// ===== Pages =====
+model Page {
+  id              String   @id @default(cuid())
+  slug            String   @unique
+  title           String
+  metaTitle       String?  @map("meta_title")
+  metaDescription String?  @map("meta_description") @db.Text
+  isVisible       Boolean  @default(true) @map("is_visible")
+  isDefault       Boolean  @default(false) @map("is_default")
+  isServices      Boolean  @default(false) @map("is_services")
+  isBooking       Boolean  @default(false) @map("is_booking")
+  order           Int      @default(0)
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  components PageComponent[]
+
+  @@map("pages")
+}
+
+// ===== Page Components =====
+model PageComponent {
+  id        String        @id @default(cuid())
+  pageId    String        @map("page_id")
+  defId     String        @map("def_id") // maps to component library id e.g. "home-slider"
+  type      ComponentType
+  config    Json          // flexible JSON config per component type
+  order     Int           @default(0)
+  createdAt DateTime      @default(now()) @map("created_at")
+  updatedAt DateTime      @updatedAt @map("updated_at")
+
+  page Page @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@map("page_components")
+}
+
+enum ComponentType {
+  HOME_SLIDER
+  SERVICES_CARD
+  TWO_COLUMN_CONTENT
+  GALLERY
+  DYNAMIC_TABLE
+  CTA_SECTION
+  TESTIMONIALS
+  FAQ_ACCORDION
+  TEAM_GRID
+  STATS_BAR
+}
+
+// ===== Form Fields (Booking Form Builder) =====
+model FormField {
+  id              String        @id @default(cuid())
+  label           String
+  type            FormFieldType
+  placeholder     String?
+  isRequired      Boolean       @default(false) @map("is_required")
+  options         Json?         // for dropdowns: string[]
+  validationRegex String?       @map("validation_regex")
+  order           Int           @default(0)
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  @@map("form_fields")
+}
+
+enum FormFieldType {
+  TEXT
+  EMAIL
+  PHONE
+  DATE
+  DROPDOWN
+  FILE_UPLOAD
+  TEXTAREA
+}
+
+// ===== Brand Settings (Singleton) =====
+model BrandSettings {
+  id              String   @id @default("brand_settings")
+  logoUrl         String?  @map("logo_url")
+  faviconUrl      String?  @map("favicon_url")
+  primaryColor    String   @default("#0F52BA") @map("primary_color")
+  secondaryColor  String   @default("#1E88E5") @map("secondary_color")
+  pharmacyName    String   @default("My Pharmacy") @map("pharmacy_name")
+  pharmacyPhone   String?  @map("pharmacy_phone")
+  pharmacyEmail   String?  @map("pharmacy_email")
+  pharmacyAddress String?  @map("pharmacy_address") @db.Text
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("brand_settings")
+}
+
+// ===== Audit Logs (Immutable - SEC-04) =====
+model AuditLog {
+  id        String      @id @default(cuid())
+  userId    String      @map("user_id")
+  action    AuditAction
+  entity    String      // table/resource name
+  entityId  String?     @map("entity_id")
+  details   Json?       // change details
+  ipAddress String      @map("ip_address")
+  createdAt DateTime    @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([createdAt])
+  @@index([userId])
+  @@map("audit_logs")
+}
+
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  EXPORT
+}

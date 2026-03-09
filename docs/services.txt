@@ -1,0 +1,167 @@
+Here is the comprehensive list of metadata fields for the **Add/Edit Service Form**.
+
+---
+
+### 1. Basic Information (Core Identity)
+*These fields define what the service is and how it is categorized.*
+
+| Field Name | Data Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| **Service Name** | `String` | Yes | Public-facing name (e.g., "Flu Vaccination"). |
+| **Internal Code** | `String` | No | SKU or internal reference (e.g., "VAC-FLU-01"). |
+| **Category** | `Enum/ID` | Yes | Linked to the 10 Core Categories (e.g., Vaccination, Consultation). |
+| **Short Description** | `String` | Yes | 1-2 sentences for cards/lists (max 150 chars). |
+| **Full Description** | `Rich Text` | Yes | Detailed info for the service page (supports bold, lists, links). |
+| **Status** | `Boolean` | Yes | `Active` (visible) or `Draft/Inactive` (hidden). |
+
+### 2. Booking & Scheduling Logic
+*These fields power the Booking Engine and Calendar.*
+
+| Field Name | Data Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| **Duration (mins)** | `Integer` | Yes | Standard slot length (e.g., 15, 30, 60). |
+| **Buffer Time (mins)** | `Integer` | No | Cleaning/prep time between slots (e.g., 5 mins). |
+| **Booking Window** | `Integer` | No | How far in advance can users book? (e.g., 90 days). |
+| **Min Notice Period** | `Integer` | No | Minimum time before slot starts (e.g., 2 hours). |
+| **Max Capacity** | `Integer` | No | Max patients per slot (default 1, useful for group sessions). |
+| **Allow Waitlist** | `Boolean` | No | Enable waitlist if slots are full. |
+| **Cancellation Policy** | `Text` | No | Specific rules for this service (e.g., "24h notice required"). |
+
+### 3. Clinical & Eligibility (Safety)
+*These fields ensure patient safety and compliance (HIPAA/GDPR).*
+
+| Field Name | Data Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| **Requires Prescription** | `Boolean` | Yes | Triggers file upload field in public booking form. |
+| **Min Age** | `Integer` | No | e.g., 18. If set, users below this age are blocked. |
+| **Max Age** | `Integer` | No | e.g., 65. |
+| **Gender Specific** | `Enum` | No | `Any`, `Male`, `Female`. |
+| **Pre-Appointment Instructions** | `Text` | No | e.g., "Fast for 8 hours", "Bring insurance card". |
+| **Contraindications Warning** | `Text` | No | e.g., "Not suitable for pregnant women". |
+| **Consent Form Required** | `Boolean` | Yes | Triggers digital signature step in booking flow. |
+
+### 4. Public Display & Media (UI Components)
+*These fields feed the Home Slider, Service Cards, and Gallery.*
+
+| Field Name | Data Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| **Hero Image** | `File (S3)` | No | High-res landscape for Home Slider (1920x1080). |
+| **Thumbnail** | `File (S3)` | No | Square/Portrait for Service Cards (600x600). |
+| **Icon** | `Icon Set` | No | Select from predefined library (e.g., Syringe, Pill). |
+| **Featured Service** | `Boolean` | No | If true, appears in "Featured" components automatically. |
+| **Video URL** | `String` | No | YouTube/Vimeo link for patient education. |
+| **Price (Public)** | `Decimal` | No | Display price on website (optional if offline billing). |
+| **Currency** | `Enum` | No | USD, NGN, GBP, etc. |
+
+### 5. Operational & Internal (Backend)
+*These fields help pharmacy staff manage the service.*
+
+| Field Name | Data Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| **Required Staff Role** | `Enum` | No | `Pharmacist`, `Technician`, `Nurse`, `Any`. |
+| **Room/Location** | `String` | No | e.g., "Consultation Room 2", "Injection Room". |
+| **Inventory Link** | `String/ID` | No | Links to stock item (e.g., "Flu Vaccine Vial") for tracking. |
+| **Internal Notes** | `Text` | No | Staff-only instructions (not visible on public site). |
+| **Cost Price (Internal)** | `Decimal` | No | For profit margin analysis (hidden from public). |
+
+### 6. SEO & Visibility (Marketing)
+*These fields ensure the service page ranks well on search engines.*
+
+| Field Name | Data Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| **URL Slug** | `String` | Yes | Auto-generated from name (e.g., `/services/flu-vaccination`). |
+| **Meta Title** | `String` | No | Overrides default page title for SEO. |
+| **Meta Description** | `String` | No | For search engine results (max 160 chars). |
+| **Keywords** | `Array` | No | Tags for internal search (e.g., "flu", "shot", "immunization"). |
+
+---
+
+### TypeScript Interface
+*to ensure type safety across the Monorepo.*
+
+```typescript
+interface ServiceMetadata {
+  // Core
+  id: string;
+  pharmacy_id: string;
+  name: string;
+  internal_code?: string;
+  category_id: string;
+  status: 'active' | 'draft' | 'archived';
+  
+  // Descriptions
+  short_description: string;
+  full_description_html: string;
+  
+  // Booking Logic
+  duration_minutes: number;
+  buffer_minutes: number;
+  booking_window_days: number;
+  min_notice_hours: number;
+  max_capacity_per_slot: number;
+  
+  // Clinical
+  requires_prescription: boolean;
+  age_min?: number;
+  age_max?: number;
+  gender_restriction?: 'any' | 'male' | 'female';
+  pre_appointment_instructions?: string;
+  consent_form_required: boolean;
+  
+  // Media
+  hero_image_url?: string;
+  thumbnail_url?: string;
+  icon_key?: string;
+  is_featured: boolean;
+  
+  // Pricing (Optional for Phase 1)
+  price_public?: number;
+  currency: string;
+  price_internal?: number;
+  
+  // Operations
+  required_role?: 'pharmacist' | 'technician' | 'nurse';
+  room_location?: string;
+  internal_notes?: string;
+  
+  // SEO
+  slug: string;
+  meta_title?: string;
+  meta_description?: string;
+  keywords: string[];
+  
+  // Audit
+  created_at: Date;
+  updated_at: Date;
+  created_by: string;
+}
+```
+
+---
+
+### UX/UI Recommendations for the Form
+
+1.  **Progressive Disclosure:**
+    *   Do not show all 40 fields at once.
+    *   Show **Basic Info** first.
+    *   Hide **Clinical** and **Operational** sections inside collapsible accordions.
+    *   Hide **SEO** inside an "Advanced Settings" accordion.
+2.  **Conditional Logic:**
+    *   If `Requires Prescription` = **True**, show a file upload configuration option.
+    *   If `Price Public` is filled, show `Currency` dropdown.
+    *   If `Age Min` is filled, automatically validate booking form against patient DOB.
+3.  **Preview Mode:**
+    *   Include a **"Preview on Site"** button that opens a modal showing how the Service Card and Booking Form will look with the current data.
+4.  **Bulk Actions:**
+    *   Allow admins to **Duplicate Service** (e.g., create "Flu Shot 2024" based on "Flu Shot 2023").
+    *   Allow **Bulk Edit** for prices or status (Active/Inactive).
+
+### Strategic Rationale (Why this matters for Enterprise)
+
+1.  **Automation:** The `Duration` and `Buffer` fields automate the calendar logic, preventing double bookings without manual intervention.
+2.  **Liability:** The `Consent Form` and `Contraindications` fields protect the pharmacy legally by ensuring patients are informed before booking.
+3.  **Flexibility:** The `Internal Notes` and `Internal Code` fields allow the pharmacy to run their business without cluttering the public view.
+4.  **Scalability:** The `Category` and `SEO` fields ensure that as you add more pharmacies, the content remains structured and discoverable.
+5.  **Future-Proofing:** Including `Price` and `Inventory Link` now means you don't need to migrate the database schema when you launch Billing or Inventory modules in Phase 2.
+
+This metadata structure ensures the **Single Source of Truth** is robust enough to power the **Home Slider**, **Booking Engine**, and **Dashboard** simultaneously without data fragmentation.

@@ -1,0 +1,30 @@
+# Generic Dockerfile for Next.js apps
+# Build arg APP_NAME determines which app to build
+ARG APP_NAME=dashboard
+
+# Stage 1: Build
+FROM node:20-alpine AS builder
+WORKDIR /app
+
+ARG APP_NAME
+
+COPY package.json package-lock.json ./
+COPY packages/ ./packages/
+COPY apps/${APP_NAME}/ ./apps/${APP_NAME}/
+
+RUN npm ci
+RUN npm run build --workspace=@vivipractice/${APP_NAME}
+
+# Stage 2: Production
+FROM node:20-alpine AS runner
+WORKDIR /app
+
+ARG APP_NAME
+ENV NODE_ENV=production
+
+COPY --from=builder /app/apps/${APP_NAME}/.next/standalone ./
+COPY --from=builder /app/apps/${APP_NAME}/.next/static ./apps/${APP_NAME}/.next/static
+COPY --from=builder /app/apps/${APP_NAME}/public ./apps/${APP_NAME}/public
+
+EXPOSE 3000
+CMD ["node", "apps/${APP_NAME}/server.js"]

@@ -1,0 +1,15 @@
+{
+"extends": "../../packages/tsconfig/nextjs.json",
+  "compilerOptions": {
+    "baseUrl": "./",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@vivipractice/types": ["../../packages/types/src/index.ts"],
+      "@vivipractice/types/*": ["../../packages/types/src/*"],
+      "@vivipractice/ui": ["../../packages/ui/src/index.ts"],
+      "@vivipractice/ui/*": ["../../packages/ui/src/*"]
+    }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}

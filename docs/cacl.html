@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pharmacy Booking Wizard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0f766e; /* Teal */
+            --primary-hover: #115e59;
+            --bg: #f3f4f6;
+            --white: #ffffff;
+            --text: #1f2937;
+            --border: #e5e7eb;
+            --error: #ef4444;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            color: var(--text);
+        }
+
+        /* Form Container */
+        .wizard-container {
+            background: var(--white);
+            width: 100%;
+            max-width: 600px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        /* Header & Progress */
+        .wizard-header {
+            padding: 30px 40px;
+            background: #f9fafb;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .progress-track {
+            background-color: var(--border);
+            height: 6px;
+            border-radius: 3px;
+            margin-top: 15px;
+            position: relative;
+        }
+
+        .progress-fill {
+            background-color: var(--primary);
+            height: 100%;
+            border-radius: 3px;
+            width: 20%; /* Start at step 1 */
+            transition: width 0.4s ease;
+        }
+
+        h2 { margin: 0; font-size: 1.5rem; color: var(--primary); }
+        p { margin: 5px 0 0; color: #6b7280; font-size: 0.9rem; }
+
+        /* Form Steps */
+        .step-content {
+            padding: 40px;
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .step-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Input Styles */
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; font-size: 0.9rem; }
+        
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.1);
+        }
+
+        /* Service Selection Cards */
+        .service-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .service-card {
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .service-card:hover { border-color: var(--primary); background: #f0fdfa; }
+        .service-card.selected { border-color: var(--primary); background: #ccfbf1; color: var(--primary-hover); }
+        .service-card i { font-size: 2rem; margin-bottom: 10px; display: block; }
+
+        /* Time Slots */
+        .slots-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .time-slot {
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        
+        .time-slot:hover { background: #f3f4f6; }
+        .time-slot.selected { background: var(--primary); color: white; border-color: var(--primary); }
+
+        /* Summary Section */
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .summary-item span:first-child { color: #6b7280; }
+        .summary-item span:last-child { font-weight: 600; }
+
+        /* Footer Actions */
+        .wizard-footer {
+            padding: 20px 40px;
+            background: #f9fafb;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.2s;
+        }
+
+        .btn-prev { background: white; border: 1px solid var(--border); color: #374151; }
+        .btn-prev:hover { background: #f3f4f6; }
+
+        .btn-next { background: var(--primary); color: white; }
+        .btn-next:hover { background: var(--primary-hover); }
+
+        .hidden { visibility: hidden; }
+
+        /* Mobile Adjustments */
+        @media (max-width: 480px) {
+            .wizard-header, .step-content, .wizard-footer { padding: 20px; }
+            .service-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="wizard-container">
+    <!-- Step Header -->
+    <div class="wizard-header">
+        <h2 id="step-title">Select Service</h2>
+        <p id="step-desc">Step 1 of 5</p>
+        <div class="progress-track">
+            <div class="progress-fill" id="progress-bar"></div>
+        </div>
+    </div>
+
+    <form id="booking-form">
+        <!-- Step 1: Service -->
+        <div class="step-content active" data-step="1">
+            <div class="service-grid">
+                <div class="service-card" onclick="selectService(this, 'Flu Vaccination')">
+                    <i class="fas fa-syringe"></i>
+                    Flu Shot
+                </div>
+                <div class="service-card" onclick="selectService(this, 'Consultation')">
+                    <i class="fas fa-user-doctor"></i>
+                    Pharmacist Consult
+                </div>
+                <div class="service-card" onclick="selectService(this, 'Medication Review')">
+                    <i class="fas fa-pills"></i>
+                    Med Review
+                </div>
+                <div class="service-card" onclick="selectService(this, 'Travel Health')">
+                    <i class="fas fa-plane"></i>
+                    Travel Health
+                </div>
+            </div>
+            <input type="hidden" id="selected-service" required>
+        </div>
+
+        <!-- Step 2: Location -->
+        <div class="step-content" data-step="2">
+            <div class="form-group">
+                <label>Search near Zip Code</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" placeholder="e.g. 10001">
+                    <button type="button" class="btn btn-prev"><i class="fas fa-search"></i></button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Available Locations</label>
+                <select id="selected-location">
+                    <option value="" disabled selected>Select a pharmacy...</option>
+                    <option value="Downtown - Main St">Downtown Branch (0.5 mi)</option>
+                    <option value="Westside - 5th Ave">Westside Branch (2.1 mi)</option>
+                    <option value="North Hills - Oak Rd">North Hills (4.0 mi)</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Step 3: Date & Time -->
+        <div class="step-content" data-step="3">
+            <div class="form-group">
+                <label>Select Date</label>
+                <input type="date" id="selected-date">
+            </div>
+            <label>Available Time Slots</label>
+            <div class="slots-grid" id="time-slots">
+                <div class="time-slot" onclick="selectTime(this, '09:00 AM')">09:00 AM</div>
+                <div class="time-slot" onclick="selectTime(this, '09:30 AM')">09:30 AM</div>
+                <div class="time-slot" onclick="selectTime(this, '10:00 AM')">10:00 AM</div>
+                <div class="time-slot" onclick="selectTime(this, '11:15 AM')">11:15 AM</div>
+                <div class="time-slot" onclick="selectTime(this, '02:00 PM')">02:00 PM</div>
+                <div class="time-slot" onclick="selectTime(this, '03:30 PM')">03:30 PM</div>
+            </div>
+            <input type="hidden" id="selected-time">
+        </div>
+
+        <!-- Step 4: Details -->
+        <div class="step-content" data-step="4">
+            <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" id="full-name" placeholder="John Doe">
+            </div>
+            <div class="form-group">
+                <label>Phone Number</label>
+                <input type="tel" id="phone" placeholder="(555) 000-0000">
+            </div>
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" id="email" placeholder="john@example.com">
+            </div>
+            <div class="form-group">
+                <label>Insurance Provider (Optional)</label>
+                <input type="text" placeholder="Provider Name">
+            </div>
+        </div>
+
+        <!-- Step 5: Review -->
+        <div class="step-content" data-step="5">
+            <div class="summary-item">
+                <span>Service</span>
+                <span id="review-service">--</span>
+            </div>
+            <div class="summary-item">
+                <span>Location</span>
+                <span id="review-location">--</span>
+            </div>
+            <div class="summary-item">
+                <span>Date & Time</span>
+                <span id="review-datetime">--</span>
+            </div>
+            <div class="summary-item">
+                <span>Patient</span>
+                <span id="review-name">--</span>
+            </div>
+            <div style="margin-top: 20px; padding: 15px; background: #ecfdf5; border-radius: 8px; color: #065f46; font-size: 0.9rem;">
+                <i class="fas fa-info-circle"></i> By clicking confirm, you agree to our cancellation policy.
+            </div>
+        </div>
+    </form>
+
+    <!-- Footer Controls -->
+    <div class="wizard-footer">
+        <button class="btn btn-prev hidden" id="prevBtn" onclick="changeStep(-1)">Back</button>
+        <button class="btn btn-next" id="nextBtn" onclick="changeStep(1)">Next Step</button>
+    </div>
+</div>
+
+<script>
+    let currentStep = 1;
+    const totalSteps = 5;
+    
+    function changeStep(direction) {
+        // Simple Validation Check (for prototype purposes)
+        if (direction === 1 && !validateStep(currentStep)) {
+            alert("Please fill out the required fields.");
+            return;
+        }
+
+        // Hide current step
+        document.querySelector(`.step-content[data-step="${currentStep}"]`).classList.remove('active');
+        
+        // Update step count
+        currentStep += direction;
+
+        // Handle submission
+        if (currentStep > totalSteps) {
+            alert("Appointment Booked Successfully!");
+            location.reload(); // Reset
+            return;
+        }
+
+        // Show new step
+        document.querySelector(`.step-content[data-step="${currentStep}"]`).classList.add('active');
+        
+        updateUI();
+    }
+
+    function updateUI() {
+        // Update Progress Bar
+        const progressPercentage = (currentStep / totalSteps) * 100;
+        document.getElementById('progress-bar').style.width = `${progressPercentage}%`;
+
+        // Update Header Text
+        const titles = ["Select Service", "Choose Location", "Date & Time", "Patient Details", "Review Booking"];
+        document.getElementById('step-title').innerText = titles[currentStep - 1];
+        document.getElementById('step-desc').innerText = `Step ${currentStep} of ${totalSteps}`;
+
+        // Button Visibility/Text
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+
+        if (currentStep === 1) {
+            prevBtn.classList.add('hidden');
+        } else {
+            prevBtn.classList.remove('hidden');
+        }
+
+        if (currentStep === totalSteps) {
+            nextBtn.innerText = "Confirm Booking";
+            populateReview(); // Load data into review step
+        } else {
+            nextBtn.innerText = "Next Step";
+        }
+    }
+
+    // Helper: Select Service Card
+    function selectService(element, value) {
+        document.querySelectorAll('.service-card').forEach(card => card.classList.remove('selected'));
+        element.classList.add('selected');
+        document.getElementById('selected-service').value = value;
+    }
+
+    // Helper: Select Time Slot
+    function selectTime(element, value) {
+        document.querySelectorAll('.time-slot').forEach(slot => slot.classList.remove('selected'));
+        element.classList.add('selected');
+        document.getElementById('selected-time').value = value;
+    }
+
+    // Helper: Populate Review Step
+    function populateReview() {
+        document.getElementById('review-service').innerText = document.getElementById('selected-service').value || 'Not Selected';
+        document.getElementById('review-location').innerText = document.getElementById('selected-location').value || 'Not Selected';
+        
+        const date = document.getElementById('selected-date').value;
+        const time = document.getElementById('selected-time').value;
+        document.getElementById('review-datetime').innerText = `${date} at ${time}`;
+        
+        document.getElementById('review-name').innerText = document.getElementById('full-name').value || 'Not entered';
+    }
+
+    // Basic Validation Logic
+    function validateStep(step) {
+        if (step === 1) return document.getElementById('selected-service').value !== "";
+        if (step === 2) return document.getElementById('selected-location').value !== "";
+        if (step === 3) return document.getElementById('selected-date').value !== "" && document.getElementById('selected-time').value !== "";
+        if (step === 4) return document.getElementById('full-name').value !== "" && document.getElementById('email').value !== "";
+        return true;
+    }
+
+    // Initialize Date Picker to Today
+    document.getElementById('selected-date').valueAsDate = new Date();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,106 @@
+version: "3.8"
+
+# VivIPractice Production Stack
+# Target: AWS Lightsail 2 GB RAM / 2 vCPUs / 60 GB SSD
+# Domain: services.vivipractice.com
+
+services:
+  # ── PostgreSQL ──────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-vivipractice}
+      POSTGRES_USER: ${POSTGRES_USER:-vivi}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vivi}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+
+  # ── NestJS API ──────────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: postgresql://${POSTGRES_USER:-vivi}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-vivipractice}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-1h}
+      JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION:-7d}
+      DASHBOARD_URL: https://services.vivipractice.com
+      PUBLIC_SITE_URL: https://services.vivipractice.com
+      CONTROL_HUB_URL: https://services.vivipractice.com
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+
+  # ── Dashboard (Next.js) ─────────────────────────────────────────
+  dashboard:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.web
+      args:
+        APP_NAME: dashboard
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3002
+      NEXT_PUBLIC_API_URL: https://services.vivipractice.com/api/v1
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+
+  # ── Public Site (Next.js) ───────────────────────────────────────
+  public-site:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.web
+      args:
+        APP_NAME: public-site
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3003
+      NEXT_PUBLIC_API_URL: https://services.vivipractice.com/api/v1
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+
+  # ── Nginx Reverse Proxy ─────────────────────────────────────────
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/certs:/etc/nginx/certs:ro
+    depends_on:
+      - api
+      - dashboard
+      - public-site
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+
+volumes:
+  pgdata:

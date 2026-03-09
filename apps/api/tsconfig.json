@@ -1,0 +1,15 @@
+{
+  "extends": "../../packages/tsconfig/nestjs.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "baseUrl": "./",
+    "paths": {
+      "@vivipractice/types": ["../../packages/types/dist/index"],
+      "@vivipractice/types/*": ["../../packages/types/dist/*"],
+      "@vivipractice/database": ["../../packages/database/dist/index"],
+      "@vivipractice/database/*": ["../../packages/database/dist/*"]
+    }
+  },
+  "include": ["src"]
+}

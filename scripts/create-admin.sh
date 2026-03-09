@@ -63,6 +63,6 @@ main();
 "
 
 echo ""
-echo "Done! You can now log in at https://services.vivipractice.com/dashboard"
+echo "Done! You can now log in at https://dashboard.vivipractice.com"
 echo "  Email: ${ADMIN_EMAIL}"
 echo "  Password: (the one you entered)"

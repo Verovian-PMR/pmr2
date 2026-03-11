@@ -6,7 +6,7 @@ export async function fetchPage(slug: string) {
   // For the home page ("/"), fetch all pages and find by slug.
   try {
     const res = await fetch(`${API_URL}/pages`, {
-      next: { revalidate: 60 },
+      next: { revalidate: 60, tags: ["pages"] },
     });
     if (!res.ok) return null;
     const pages = await res.json();
@@ -18,7 +18,7 @@ export async function fetchPage(slug: string) {
 
 export async function fetchServices() {
   const res = await fetch(`${API_URL}/services`, {
-    next: { revalidate: 60 },
+    next: { revalidate: 60, tags: ["services"] },
   });
   if (!res.ok) return [];
   return res.json();
@@ -27,7 +27,7 @@ export async function fetchServices() {
 export async function fetchServicesData() {
   try {
     const res = await fetch(`${API_URL}/services-data`, {
-      next: { revalidate: 30 },
+      next: { revalidate: 30, tags: ["services"] },
     });
     if (!res.ok) return null;
     const data = await res.json();
@@ -39,7 +39,7 @@ export async function fetchServicesData() {
 
 export async function fetchBrandSettings() {
   const res = await fetch(`${API_URL}/site-settings`, {
-    next: { revalidate: 300 },
+    next: { revalidate: 60, tags: ["settings"] },
   });
   if (!res.ok) return null;
   return res.json();
@@ -73,7 +73,7 @@ export async function fetchFormFields() {
 export async function fetchPages() {
   try {
     const res = await fetch(`${API_URL}/pages`, {
-      next: { revalidate: 60 },
+      next: { revalidate: 60, tags: ["pages"] },
     });
     if (!res.ok) return [];
     return res.json();

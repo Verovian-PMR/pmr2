@@ -9,9 +9,11 @@ interface Props {
 
 export default function HomeSlider({ config }: Props) {
   const layout = (config.layout as string) || "centered";
+  const sliderLayout = (config.sliderLayout as string) || "full-bleed";
   const overlayColor = (config.overlayColor as string) || "rgba(0,0,0,0.45)";
   const textColor = (config.textColor as string) || "#FFFFFF";
   const padding = Number(config.padding) || 128;
+  const borderRadius = Number(config.borderRadius) || 0;
   const ids = (config.selectedServiceIds as string[]) || [];
 
   // Use API services if injected by ComponentRenderer, else fall back to hardcoded
@@ -61,27 +63,45 @@ export default function HomeSlider({ config }: Props) {
 
   const svc = services[current];
   const isCentered = layout === "centered";
+  const isContained = sliderLayout === "contained-rounded";
+  const containerRadius = isContained ? 24 : borderRadius;
 
   const bgStyle: React.CSSProperties = svc?.heroImageUrl
     ? { backgroundImage: `linear-gradient(${overlayColor}, ${overlayColor}), url(${svc.heroImageUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
     : { background: `linear-gradient(135deg, ${primary} 0%, ${secondary} 55%, ${primary} 100%)` };
 
+  // Outer wrapper for contained layouts
+  const Wrapper = isContained ? (
+    ({ children }: { children: React.ReactNode }) => (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-6">
+        {children}
+      </div>
+    )
+  ) : ({ children }: { children: React.ReactNode }) => <>{children}</>;
+
   return (
+    <Wrapper>
     <section
-      style={{ ...bgStyle, minHeight: "520px" }}
-      className="relative transition-all duration-700 flex items-center"
+      style={{
+        ...bgStyle,
+        minHeight: isContained ? "460px" : "520px",
+        borderRadius: isContained ? `${containerRadius}px` : `${borderRadius}px`,
+      }}
+      className={`relative transition-all duration-700 flex items-center overflow-hidden ${
+        isContained ? "shadow-xl" : ""
+      }`}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
       <div
-        className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ${isCentered ? "text-center" : "text-left"}`}
+        className={`w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 ${isCentered ? "text-center" : "text-left"}`}
         style={!isCentered ? { maxWidth: "min(90%, 50%)", marginLeft: "clamp(1rem, 8vw, 8rem)" } : undefined}
       >
         <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-sm mb-4" style={{ backgroundColor: "rgba(255,255,255,0.15)", color: textColor }}>
           {svc.categoryId}
         </span>
         <h1 className="text-4xl md:text-5xl font-bold mb-3 leading-tight" style={{ color: textColor }}>{svc.name}</h1>
-        <p className="text-base md:text-lg mb-2 opacity-90 max-w-2xl" style={{ color: textColor, ...(isCentered ? { margin: "0 auto 8px" } : {}) }}>
+        <p className="text-base md:text-lg mb-2 opacity-90 max-w-2xl break-words" style={{ color: textColor, ...(isCentered ? { margin: "0 auto 8px" } : {}) }}>
           {svc.shortDescription}
         </p>
         <p className="text-sm mb-8 opacity-75" style={{ color: textColor }}>
@@ -115,5 +135,6 @@ export default function HomeSlider({ config }: Props) {
         </div>
       )}
     </section>
+    </Wrapper>
   );
 }

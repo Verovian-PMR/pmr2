@@ -8,9 +8,12 @@ export interface BrandSettings {
   accentColor: string;
 }
 
+export type HeaderStyle = "classic" | "centered" | "transparent";
+
 export interface HeaderSettings {
   bgColor: string;
   navFontColor: string; // Also used as active page indicator color
+  headerStyle: HeaderStyle;
 }
 
 export interface FooterSettings {

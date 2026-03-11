@@ -16,9 +16,12 @@ export interface BrandSettings {
   accentColor: string;
 }
 
+export type HeaderStyle = "classic" | "centered" | "transparent";
+
 export interface HeaderSettings {
   bgColor: string;
   navFontColor: string;
+  headerStyle: HeaderStyle;
 }
 
 export interface FooterSettings {
@@ -98,6 +101,7 @@ export const DEFAULT_SETTINGS: GlobalSettings = {
   header: {
     bgColor: "#FFFFFF",
     navFontColor: "#0F52BA",
+    headerStyle: "classic",
   },
   footer: {
     bgColor: "#0F52BA",
@@ -126,6 +130,7 @@ export const DEFAULT_PAGES: SitePage[] = [
         config: {
           selectedServiceIds: [],
           layout: "centered",
+          sliderLayout: "full-bleed",
           overlayColor: "rgba(0,0,0,0.45)",
           textColor: "#FFFFFF",
           buttonText: "Book Now",

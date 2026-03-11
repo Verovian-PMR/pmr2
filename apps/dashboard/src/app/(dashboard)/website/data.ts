@@ -12,6 +12,7 @@ export const DEFAULT_SETTINGS: GlobalSettings = {
   header: {
     bgColor: "#FFFFFF",
     navFontColor: "#0F52BA",
+    headerStyle: "classic",
   },
   footer: {
     bgColor: "#0F52BA",
@@ -23,7 +24,7 @@ export const DEFAULT_SETTINGS: GlobalSettings = {
 };
 
 export const DEFAULT_PAGES: SitePage[] = [
-  { id: "pg-home",     title: "Home",       slug: "/",         isVisible: true,  isDefault: true,  isServices: false, isBooking: false, components: [{ id: "ci-1", defId: "home-slider", config: { selectedServiceIds: [], layout: "centered", overlayColor: "rgba(0,0,0,0.45)", textColor: "#FFFFFF", buttonText: "Book Now", borderRadius: "0", padding: "128" }, order: 0 }, { id: "ci-2", defId: "services-list-card", config: { selectedServiceIds: [], bgColor: "#FFFFFF", cardBorderRadius: "16", padding: "48" }, order: 1 }, { id: "ci-3", defId: "cta-section", config: { heading: "Ready to get started?", buttonText: "Book an Appointment", bgColor: "#E8EEF9", textColor: "#0F52BA", buttonColor: "#0F52BA", borderRadius: "12", padding: "48" }, order: 2 }], order: 0 },
+  { id: "pg-home",     title: "Home",       slug: "/",         isVisible: true,  isDefault: true,  isServices: false, isBooking: false, components: [{ id: "ci-1", defId: "home-slider", config: { selectedServiceIds: [], layout: "centered", sliderLayout: "full-bleed", overlayColor: "rgba(0,0,0,0.45)", textColor: "#FFFFFF", buttonText: "Book Now", borderRadius: "0", padding: "128" }, order: 0 }, { id: "ci-2", defId: "services-list-card", config: { selectedServiceIds: [], bgColor: "#FFFFFF", cardBorderRadius: "16", padding: "48" }, order: 1 }, { id: "ci-3", defId: "cta-section", config: { heading: "Ready to get started?", buttonText: "Book an Appointment", bgColor: "#E8EEF9", textColor: "#0F52BA", buttonColor: "#0F52BA", borderRadius: "12", padding: "48" }, order: 2 }], order: 0 },
   { id: "pg-about",    title: "About Us",   slug: "/about",    isVisible: true,  isDefault: true,  isServices: false, isBooking: false, components: [{ id: "ci-4", defId: "two-column-content", config: { leftContent: "We are a family-run pharmacy committed to delivering exceptional pharmaceutical care to our community.", rightType: "image", rightImageUrl: "", rightImageLayout: "full-width", mapAddress: "", bgColor: "#FFFFFF", padding: "48" }, order: 0 }, { id: "ci-5", defId: "team-grid", config: { columns: 3, bgColor: "#FFFFFF", cardBorderRadius: "16", showRole: true, padding: "48" }, order: 1 }], order: 1 },
   { id: "pg-services", title: "Services",   slug: "/services",  isVisible: true,  isDefault: true,  isServices: true,  isBooking: false, components: [], order: 2 },
   { id: "pg-contact",  title: "Contact",    slug: "/contact",   isVisible: true,  isDefault: true,  isServices: false, isBooking: false, components: [{ id: "ci-6", defId: "two-column-content", config: { leftContent: "Get in touch with our team for any questions or concerns.", rightType: "map", rightImageUrl: "", rightImageLayout: "full-width", mapAddress: "123 High Street, London, UK", bgColor: "#FFFFFF", padding: "48" }, order: 0 }], order: 3 },
@@ -41,6 +42,7 @@ export const COMPONENT_LIBRARY: ComponentDef[] = [
     defaultConfig: {
       selectedServiceIds: [],
       layout: "centered",
+      sliderLayout: "full-bleed",
       overlayColor: "rgba(0,0,0,0.45)",
       textColor: "#FFFFFF",
       buttonText: "Book Now",
@@ -49,7 +51,8 @@ export const COMPONENT_LIBRARY: ComponentDef[] = [
     },
     configFields: [
       { key: "selectedServiceIds", label: "Select Services", type: "multiselect-services" },
-      { key: "layout", label: "Layout Style", type: "select", options: [{ value: "centered", label: "Centered" }, { value: "left-aligned", label: "Left Aligned" }] },
+      { key: "layout", label: "Text Layout", type: "select", options: [{ value: "centered", label: "Centered" }, { value: "left-aligned", label: "Left Aligned" }] },
+      { key: "sliderLayout", label: "Slider Layout", type: "select", options: [{ value: "full-bleed", label: "Full Bleed (Edge to Edge)" }, { value: "contained-rounded", label: "Contained Rounded" }] },
       { key: "overlayColor", label: "Overlay Color", type: "color" },
       { key: "textColor", label: "Text Color", type: "color" },
       { key: "buttonText", label: "Button Text", type: "text", placeholder: "Book Now" },

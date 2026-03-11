@@ -6,9 +6,11 @@ interface MobileNavProps {
   pages: { id: string; slug: string; title: string }[];
   navFontColor: string;
   primaryColor: string;
+  variant?: "default" | "transparent";
+  scrolled?: boolean;
 }
 
-export default function MobileNav({ pages, navFontColor, primaryColor }: MobileNavProps) {
+export default function MobileNav({ pages, navFontColor, primaryColor, variant = "default", scrolled = false }: MobileNavProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -31,7 +33,7 @@ export default function MobileNav({ pages, navFontColor, primaryColor }: MobileN
       </button>
 
       {open && (
-        <div className="absolute top-16 left-0 right-0 bg-white border-b border-neutral-200 shadow-lg z-50 animate-fadeIn">
+        <div className={`absolute ${variant === "transparent" ? "top-16" : "top-16"} left-0 right-0 bg-white border-b border-neutral-200 shadow-lg z-50 animate-fadeIn`}>
           <nav className="max-w-7xl mx-auto px-4 py-4 flex flex-col gap-1">
             {pages.map((page) => (
               <a

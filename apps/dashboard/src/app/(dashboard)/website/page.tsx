@@ -172,6 +172,15 @@ export default function WebsitePage() {
           body: JSON.stringify({ pages }),
         }),
       ]);
+
+      // Invalidate public-site cache so changes appear immediately
+      const publicSiteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3003";
+      fetch(`${publicSiteUrl}/api/revalidate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tags: ["settings", "pages"] }),
+      }).catch(() => {}); // fire-and-forget — don't block save
+
       setShowSaveToast(true);
       setTimeout(() => setShowSaveToast(false), 2500);
     } catch (err: any) {
@@ -761,8 +770,19 @@ export default function WebsitePage() {
 
           <div className="grid grid-cols-2 gap-6">
             <div className="bg-white rounded-xl border border-neutral-200 shadow-sm">
-              <SectionLabel title="Header" subtitle="Navbar color system and active page indicator color." />
+              <SectionLabel title="Header" subtitle="Navbar layout, colors, and active page indicator." />
               <div className="p-6 space-y-4">
+                <div>
+                  <label className="block text-xs font-medium text-neutral-600 mb-1">Header Style</label>
+                  <select value={settings.header.headerStyle || "classic"} onChange={(e) => setSettings((s) => ({ ...s, header: { ...s.header, headerStyle: e.target.value as any } }))} className={inputCls}>
+                    <option value="classic">Classic — Logo left, nav right</option>
+                    <option value="centered">Centered — Logo centered, nav below</option>
+                    <option value="transparent">Transparent — Overlays hero, glass on scroll</option>
+                  </select>
+                  <p className="text-[11px] text-neutral-500 mt-1">
+                    {settings.header.headerStyle === "transparent" ? "Header overlays page content with frosted glass effect on scroll. Works best with a hero slider." : settings.header.headerStyle === "centered" ? "Two-tier layout with centered logo and centered navigation links." : "Standard horizontal navbar with logo on the left."}
+                  </p>
+                </div>
                 <div>
                   <label className="block text-xs font-medium text-neutral-600 mb-1">Background Color</label>
                   <div className="flex items-center gap-2">

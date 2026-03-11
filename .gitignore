@@ -40,3 +40,7 @@ coverage/
 # Docker volumes & certs
 docker/data/
 docker/nginx/certs/
+
+# Temp sync files
+.tmp.driveupload/
+.tmp.drivedownload/
